@@ -44,6 +44,10 @@ spec:
             properties:
               allowCrossNamespaceImport:
                 type: boolean
+              editable:
+                description: Whether to enable or disable editing of the alert group
+                  in Grafana UI
+                type: boolean
               folderRef:
                 description: Match GrafanaFolders CRs to infer the uid
                 type: string

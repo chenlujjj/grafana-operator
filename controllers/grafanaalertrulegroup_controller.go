@@ -162,7 +162,11 @@ func (r *GrafanaAlertRuleGroupReconciler) reconcileWithInstance(ctx context.Cont
 	if err != nil {
 		return fmt.Errorf("building grafana client: %w", err)
 	}
-	strue := "true"
+
+	xDisableProvenance := "true"
+	if group.Spec.Editable != nil && !*group.Spec.Editable {
+		xDisableProvenance = "false"
+	}
 
 	_, err = cl.Folders.GetFolderByUID(folderUID) //nolint:errcheck
 	if err != nil {
@@ -224,7 +228,7 @@ func (r *GrafanaAlertRuleGroupReconciler) reconcileWithInstance(ctx context.Cont
 		if _, ok := currentRules[rule.UID]; ok {
 			params := provisioning.NewPutAlertRuleParams().
 				WithBody(apiRule).
-				WithXDisableProvenance(&strue).
+				WithXDisableProvenance(&xDisableProvenance).
 				WithUID(rule.UID)
 			_, err := cl.Provisioning.PutAlertRule(params) //nolint:errcheck
 			if err != nil {
@@ -233,7 +237,7 @@ func (r *GrafanaAlertRuleGroupReconciler) reconcileWithInstance(ctx context.Cont
 		} else {
 			params := provisioning.NewPostAlertRuleParams().
 				WithBody(apiRule).
-				WithXDisableProvenance(&strue)
+				WithXDisableProvenance(&xDisableProvenance)
 			_, err = cl.Provisioning.PostAlertRule(params) //nolint:errcheck
 			if err != nil {
 				return fmt.Errorf("creating rule: %w", err)
@@ -247,7 +251,7 @@ func (r *GrafanaAlertRuleGroupReconciler) reconcileWithInstance(ctx context.Cont
 		if !present {
 			params := provisioning.NewDeleteAlertRuleParams().
 				WithUID(uid).
-				WithXDisableProvenance(&strue)
+				WithXDisableProvenance(&xDisableProvenance)
 			_, err := cl.Provisioning.DeleteAlertRule(params) //nolint:errcheck
 			if err != nil {
 				return fmt.Errorf("deleting old alert rule %s: %w", uid, err)
@@ -265,7 +269,7 @@ func (r *GrafanaAlertRuleGroupReconciler) reconcileWithInstance(ctx context.Cont
 		WithBody(mGroup).
 		WithGroup(group.Name).
 		WithFolderUID(folderUID).
-		WithXDisableProvenance(&strue)
+		WithXDisableProvenance(&xDisableProvenance)
 	_, err = cl.Provisioning.PutAlertRuleGroup(params) //nolint:errcheck
 	if err != nil {
 		return fmt.Errorf("updating group: %s", err.Error())
